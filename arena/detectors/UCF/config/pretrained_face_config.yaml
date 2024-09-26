@@ -1,0 +1,94 @@
+SWA: false
+backbone_config:
+  dropout: false
+  inc: 3
+  mode: adjust_channel
+  num_classes: 2
+backbone_name: xception
+compression: c23
+cuda: true
+cudnn: true
+dataset_json_folder: preprocessing/dataset_json_v3
+dataset_meta:
+  fake:
+  - create_splits: false
+    path: bitmind/celeb-a-hq___stable-diffusion-xl-base-1.0___256_training_faces
+  - create_splits: false
+    path: bitmind/ffhq-256___stable-diffusion-xl-base-1.0_training_faces
+  real:
+  - create_splits: false
+    path: bitmind/celeb-a-hq_training_faces
+  - create_splits: false
+    path: bitmind/ffhq-256_training_faces
+ddp: false
+dry_run: false
+encoder_feat_dim: 512
+faces_only: true
+frame_num:
+  test: 32
+  train: 32
+lmdb: true
+lmdb_dir: ./datasets/lmdb
+local_rank: 0
+log_dir: ./logs/training/ucf_2024-09-17-16-44-50
+logdir: ./logs
+loss_func:
+  cls_loss: cross_entropy
+  con_loss: contrastive_regularization
+  rec_loss: l1loss
+  spe_loss: cross_entropy
+losstype: null
+lr_scheduler: null
+manualSeed: 1024
+mean:
+- 0.5
+- 0.5
+- 0.5
+metric_scoring: auc
+mode: train
+model_name: ucf
+nEpochs: 2
+optimizer:
+  adam:
+    amsgrad: false
+    beta1: 0.9
+    beta2: 0.999
+    eps: 1.0e-08
+    lr: 0.0002
+    weight_decay: 0.0005
+  sgd:
+    lr: 0.0002
+    momentum: 0.9
+    weight_decay: 0.0005
+  type: adam
+pretrained: ../weights/xception_best.pth
+rec_iter: 100
+resolution: 256
+rgb_dir: ./datasets/rgb
+save_avg: true
+save_ckpt: true
+save_epoch: 1
+save_feat: true
+specific_task_number: 2
+split_transforms:
+  test:
+    name: base_transforms
+  train:
+    name: random_aug_transforms
+  validation:
+    name: base_transforms
+start_epoch: 0
+std:
+- 0.5
+- 0.5
+- 0.5
+test_batchSize: 32
+train_batchSize: 32
+train_dataset:
+- bitmind/celeb-a-hq_training_faces
+- bitmind/ffhq-256_training_faces
+- bitmind/celeb-a-hq___stable-diffusion-xl-base-1.0___256_training_faces
+- bitmind/ffhq-256___stable-diffusion-xl-base-1.0_training_faces
+with_landmark: false
+with_mask: false
+workers: 7

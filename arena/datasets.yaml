@@ -1,0 +1,20 @@
+real:
+  - path: bitmind/celeb-a-hq
+    split: train
+  - path: evanarlian/imagenet_1k_resized_256
+    split: test
+  - path: nlphuji/flickr30k
+    split: test
+
+fake:
+  - path: bitmind/celeb-a-hq___FLUX.1-dev
+    split: train
+  - path: bitmind/celeb-a-hq___stable-diffusion-xl-base-1.0
+    split: train
+  - path: bitmind/MS-COCO-unique___FLUX.1-dev
+    split: train
+  - path: bitmind/flickr30k-stable-diffusion
+    split: train
+  - path: poloclub/diffusiondb
+    split: train
+    name: 2m_first_10k
