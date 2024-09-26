@@ -119,7 +119,6 @@ class UCFDetector(DeepfakeDetector):
             ConvertToRGB(),
             CenterCrop(),
             transforms.Resize((256,256)),
-            CLAHE(),
             transforms.ToTensor()
         ]
         if self.dataset_type == 'real':
