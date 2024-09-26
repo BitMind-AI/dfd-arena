@@ -101,5 +101,4 @@ This repository is licensed under the MIT License.
 ```
 
 ## Acknowledgements
-Thank you to the authors of the Deepfake Bench ([paper](https://arxiv.org/abs/2307.01426), [repository](https://github.com/SCLBD/DeepfakeBench)), who provide a framework for training and evaluating models for detecting face deepfakes. The authors also 
-
+Thank you to the authors of the Deepfake Bench ([paper](https://arxiv.org/abs/2307.01426), [repository](https://github.com/SCLBD/DeepfakeBench)), who provide a framework for training and evaluating models for detecting face deepfakes, and are also the authors behind the UCF model ([UCF: Uncovering Common Features for Generalizable Deepfake Detection](http://export.arxiv.org/abs/2304.13949)). 
