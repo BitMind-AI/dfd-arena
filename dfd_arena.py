@@ -19,7 +19,10 @@ class Arena:
         detectors,
         datasets,
         name=None,
-        log_dir='.'
+        log_dir='.',
+        leaderboard_submission=False,
+        repo_id=None,
+        hf_token=None
     ):
         """
         Args:
@@ -49,6 +52,9 @@ class Arena:
         }
         self.dataset_indices = defaultdict(list)
         self.n_failed = defaultdict(int)
+        self.leaderboard_submission = leaderboard_submission
+        self.repo_id = repo_id
+        self.hf_token = hf_token
 
     def run_benchmarks(self):
         """Run benchmarks for all detectors against real and synthetic datasets."""
@@ -59,6 +65,8 @@ class Arena:
             self.benchmark_detector(detector)
             print(f'----- Detector: {detector_name} -----')
             self.display_metrics(self.metrics[detector_name])
+            if self.leaderboard_submission:
+                self.push_result_to_hf(self.metrics[detector_name])
         self.save_results()
 
     def benchmark_detector(self, detector, n_dataset_samples=1000):
@@ -135,7 +143,6 @@ class Arena:
             if ds_path == 'total':
                 for metric, value in computed_metrics.items():
                     print(f'\t{metric}: {value}')
-                print()
             else:
                 print(f'\taccuracy: {computed_metrics["accuracy"]}')
 
@@ -147,13 +154,55 @@ class Arena:
         joblib.dump(self.dataset_indices, os.path.join(output_dir, 'dataset_indices.pkl'))
         joblib.dump(self.n_failed, os.path.join(output_dir, 'n_failed.pkl'))
 
+    def push_result_to_hf(self, metrics):
+        from datasets import load_dataset, Dataset
+        from huggingface_hub import upload_file
+        import pandas as pd
+        
+        results_dict = {}
+        for ds_path, ds_metrics in metrics.items():
+            computed_metrics = compute_metrics(**ds_metrics)
+            if ds_path == 'total':
+                for metric, value in computed_metrics.items():
+                    results_dict[metric] = value
+            else:
+                results_dict[ds_path] = computed_metrics['accuracy']
+                
+        print(f"results_dict: {results_dict}")
+        df_result = pd.DataFrame([results_dict])
+        df_result['Detector'] = self.detectors[0]
+        try:
+            existing_dataset = load_dataset(self.repo_id, use_auth_token=self.hf_token)
+            df_existing = pd.DataFrame(existing_dataset)
+            df_updated = pd.concat([df_existing, df_result], ignore_index=True)
+        except Exception as e:
+            print(f"Dataset not found or unable to download: {str(e)}. Creating a new dataset.")
+            df_updated = df_result
+
+        print(f"df_updated: {df_updated}")
+        # Save the updated (or new) DataFrame as a CSV file locally
+        submission_file = "updated_results.csv"
+        df_updated.to_csv(submission_file, index=False)
+        
+        try:
+            dataset = load_dataset("csv", data_files=submission_file)
+            dataset.push_to_hub(repo_id=self.repo_id, token=self.hf_token)
+            return "Submission successful!"
+        except Exception as e:
+            return f"Failed to push submission: {str(e)}"
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Benchmark deepfake detection models.')
     parser.add_argument('--log-dir', type=str, default='./benchmark_runs', help='Directory where all pkl files will be logged')
     parser.add_argument('--run-name', type=str, default=None, help='Name of benchmarking run')
     parser.add_argument('--detectors', nargs='+', default=['CAMO', 'UCF', 'NPR'], help='List of detector names')
-    parser.add_argument('--dataset-config', type=str, default='arena/datasets.yaml', help='Path to YAML file containing datasets')
+    parser.add_argument('--dataset-config', type=str, default='arena/datasets.yaml',
+                        help='Path to YAML file containing datasets')
+    parser.add_argument('--leaderboard-submission', type=bool, default='False',
+                        help='Used to push the metrics dict to the HF results dataset when scoring a leaderboard submission')
+    parser.add_argument('--repo_id', type=str, default='', help='Path to leaderboard results dataset repo on HuggingFace')
+    parser.add_argument('--hf_token', type=str, default='', help='HuggingFace token used update the results dataset')
 
     args = parser.parse_args()
 
@@ -165,7 +214,10 @@ if __name__ == '__main__':
         detectors=args.detectors,
         datasets=benchmark_datasets,
         name=args.run_name,
-        log_dir=args.log_dir
+        log_dir=args.log_dir,
+        leaderboard_submission=args.leaderboard_submission,
+        hf_token=args.hf_token,
+        repo_id=args.repo_id
     )
     arena.run_benchmarks()
     print(f"----- Finished benchmarking in {time.time() - start:.4f}s -----")

@@ -1,12 +1,15 @@
 # pm2 start detector_submission.py --no-autorestart -- \
-#     --repo_id [huggingface model repo] \
-#     --detector_module [detector registry module]
+#      --detectors_repo_id caliangandrew/submit_test \
+#      --detector_file test_detector.py \
+#      --configs test_config.yaml \
+#      --module test \
+#      --results_repo_id caliangandrew/dfd-arena-results \
+#      --hf_token [token]
 
 import os
 import shutil
 import argparse
-from huggingface_hub import HfApi
-from huggingface_hub import snapshot_download
+from huggingface_hub import HfApi, snapshot_download
 import subprocess
 
 def download_huggingface_model(repo_id, local_dir="submission_files"):
@@ -54,7 +57,7 @@ def move_files(local_dir, detector_file, configs, module):
     shutil.rmtree(local_dir)
     print(f"Deleted the original directory: {local_dir}")
 
-def run_dfd_arena_with_pm2(detector_module):
+def run_dfd_arena_with_pm2(detector_module, repo_id, hf_token):
     """
     Runs dfd_arena.py using pm2 with the specified detector module.
     
@@ -67,7 +70,9 @@ def run_dfd_arena_with_pm2(detector_module):
         "--no-autorestart",
         "--name", "dfd_arena",  # Naming the process
         "--",  # Passes subsequent arguments to the script
-        "--detectors", detector_module
+        "--detectors", detector_module,
+        "--repo_id", repo_id,
+        "--hf_token", hf_token
     ]
     
     try:
@@ -79,7 +84,7 @@ def run_dfd_arena_with_pm2(detector_module):
 
 def main():
     parser = argparse.ArgumentParser(description="Download a Hugging Face model repo to a local directory")
-    parser.add_argument("--repo_id", type=str, required=True,
+    parser.add_argument("--detectors_repo_id", type=str, required=True,
                         help="The Hugging Face model repo name (e.g., 'bert-base-uncased')")
     parser.add_argument("--detector_file", type=str, required=True,
                         help="The name of the .py file containing the DeepfakeDetector subclass")
@@ -89,15 +94,18 @@ def main():
                         help="The name of the registered detector module in DETECTOR_REGISTRY")
     parser.add_argument("--local_dir", type=str, default="submission_files",
                         help="The local directory to save files (default is 'submission_files')")
+    parser.add_argument('--results_repo_id', type=str, default='',
+                        help='Path to leaderboard results dataset repo on HuggingFace')
+    parser.add_argument('--hf_token', type=str, default='', help='HuggingFace token used update the results dataset')
     args = parser.parse_args()
     args = parser.parse_args()
     
-    downloaded_dir = download_huggingface_model(repo_id=args.repo_id, local_dir=args.local_dir)
+    downloaded_dir = download_huggingface_model(repo_id=args.detectors_repo_id, local_dir=args.local_dir)
     if downloaded_dir:
         move_files(downloaded_dir, args.detector_file, args.configs, args.module)
     else:
         print("Failed to download files.")
-    run_dfd_arena_with_pm2(detector_module=args.module)
+    run_dfd_arena_with_pm2(detector_module=args.module, repo_id=args.results_repo_id, hf_token=args.hf_token)
 
 if __name__ == "__main__":
     main()
