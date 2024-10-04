@@ -33,6 +33,7 @@ These efforts are valuable for testing new model architectures under limited con
 
 ```bash
 git clone git@github.com:BitMind-AI/dfd-arena.git
+cd dfd-arena
 ```
 
 ### Instal System Dependencies
@@ -56,7 +57,7 @@ conda activate arena
 
 With your virtual env activated, you can install `dfd-arena`:
 ```bash
-cd dfd-arena && pip install -e
+pip install -r requirements.txt
 ```
 
 ## Usage
