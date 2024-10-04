@@ -55,7 +55,7 @@ def move_files(local_dir, detector_file, configs, module):
     shutil.rmtree(local_dir)
     print(f"Deleted the original directory: {local_dir}")
 
-def run_dfd_arena_with_pm2(detector_module, repo_id, hf_token):
+def run_dfd_arena_with_pm2(detector_module, model_repo_id, detectors_repo_id, hf_token):
     """
     Runs dfd_arena.py using pm2 with the specified detector module.
     
@@ -69,7 +69,8 @@ def run_dfd_arena_with_pm2(detector_module, repo_id, hf_token):
         "--name", "dfd_arena",  # Naming the process
         "--",  # Passes subsequent arguments to the script
         "--detectors", detector_module,
-        "--repo_id", repo_id,
+        "--model_repo_id", model_repo_id,
+        "--detectors_repo_id", detectors_repo_id,
         "--hf_token", hf_token
     ]
     
@@ -82,7 +83,7 @@ def run_dfd_arena_with_pm2(detector_module, repo_id, hf_token):
 
 def main():
     parser = argparse.ArgumentParser(description="Download a Hugging Face model repo to a local directory")
-    parser.add_argument("--dataset_repo_id", type=str, required=True,
+    parser.add_argument("--detectors_repo_id", type=str, required=True,
                         help="The Hugging Face dataset repo name containing all submission details")
     parser.add_argument("--local_dir", type=str, default="submission_files",
                         help="The local directory to save files (default is 'submission_files')")
@@ -91,8 +92,12 @@ def main():
     parser.add_argument('--hf_token', type=str, default='', help='HuggingFace token used update the results dataset')
     args = parser.parse_args()
     args = parser.parse_args()
-    dataset = load_dataset(args.dataset_repo_id)['train']
-    filtered_dataset = dataset.filter(lambda x: x['evaluation_progress'] == 'Pending')[0]
+    dataset = load_dataset(args.detectors_repo_id)['train']
+    filtered_dataset = dataset.filter(lambda x: x['evaluation_progress'] == 'Pending')
+    if len(filtered_dataset) == 0:
+        print("No rows with 'evaluation_progress' equal to 'Pending'. Exiting.")
+        sys.exit(1)
+    filtered_dataset = filtered_dataset[0]
     print(filtered_dataset)
     downloaded_dir = download_huggingface_model(repo_id=filtered_dataset["model_repo"], local_dir=args.local_dir)
     if downloaded_dir:
@@ -103,7 +108,8 @@ def main():
     else:
         print("Failed to download files.")
     run_dfd_arena_with_pm2(detector_module=filtered_dataset["detector_name"],
-                           repo_id=args.results_repo_id,
+                           model_repo_id=filtered_dataset["model_repo"],
+                           detectors_repo_id=args.detectors_repo_id,
                            hf_token=args.hf_token)
 
 if __name__ == "__main__":
