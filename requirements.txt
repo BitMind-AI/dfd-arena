@@ -9,3 +9,4 @@ numpy==1.26.4
 pillow==10.4.0
 pandas==2.2.2
 dlib==19.24.6
+joblib==1.4.2
