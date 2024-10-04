@@ -36,10 +36,12 @@ git clone git@github.com:BitMind-AI/dfd-arena.git
 cd dfd-arena
 ```
 
-### Instal System Dependencies
+### Instal; System Dependencies
 If you're benchmarking any detectors that use [dlib](http://dlib.net/), your system must have `cmake` installed.
 
 ```bash
+export PIP_NO_CACHE_DIR=1
+chmod +x install_system_deps.sh 
 ./install_system_deps.sh
 ```
 
