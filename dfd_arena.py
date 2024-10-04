@@ -172,9 +172,10 @@ class Arena:
         df_result = pd.DataFrame([results_dict])
         df_result['Detector'] = self.detectors[0]
         try:
-            existing_dataset = load_dataset(self.repo_id, use_auth_token=self.hf_token)
+            existing_dataset = load_dataset(self.repo_id, use_auth_token=self.hf_token)['train']
             df_existing = pd.DataFrame(existing_dataset)
-            df_updated = pd.concat([df_existing, df_result], ignore_index=True)
+            print(f"Existing dataset loaded: {df_existing}")
+            df_updated = pd.concat([df_existing, df_result])
         except Exception as e:
             print(f"Dataset not found or unable to download: {str(e)}. Creating a new dataset.")
             df_updated = df_result
