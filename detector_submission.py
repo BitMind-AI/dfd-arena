@@ -1,9 +1,10 @@
 # pm2 start detector_submission.py --no-autorestart -- \
-#      --dataset_repo_id caliangandrew/dfd-arena-detectors
+#      --detectors_repo_id caliangandrew/dfd-arena-detectors
 #      --results_repo_id caliangandrew/dfd-arena-results \
 #      --hf_token [token]
 
 import os
+import sys
 import shutil
 import argparse
 from huggingface_hub import HfApi, snapshot_download
