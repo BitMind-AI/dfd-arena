@@ -56,24 +56,37 @@ def move_files(local_dir, detector_file, configs, module):
     shutil.rmtree(local_dir)
     print(f"Deleted the original directory: {local_dir}")
 
-def run_dfd_arena_with_pm2(detector_module, model_repo_id, detectors_repo_id, hf_token):
+def run_dfd_arena_with_pm2(detector_module, model_repo_id, detectors_repo_id, hf_token, ec2_automation=True):
     """
     Runs dfd_arena.py using pm2 with the specified detector module.
     
     Args:
     - detector_module (str): The name of the detector module to use.
     """
-    # The command to run dfd_arena.py with pm2
-    command = [
-        "pm2", "start", "dfd_arena.py", 
-        "--no-autorestart",
-        "--name", "dfd_arena",  # Naming the process
-        "--",  # Passes subsequent arguments to the script
-        "--detectors", detector_module,
-        "--model_repo_id", model_repo_id,
-        "--detectors_repo_id", detectors_repo_id,
-        "--hf_token", hf_token
-    ]
+    if ec2_automation:
+        command = [
+            "pm2", "start", "dfd_arena.py", 
+            "--no-autorestart",
+            "--name", "dfd_arena",  # Naming the process
+            "--output", "/home/ubuntu/detector_submission_out.log",  # Output log file
+            "--error", "/home/ubuntu/detector_submission_err.log",   # Error log file
+            "--",  # Passes subsequent arguments to the script
+            "--detectors", detector_module,
+            "--model_repo_id", model_repo_id,
+            "--detectors_repo_id", detectors_repo_id,
+            "--hf_token", hf_token
+        ]
+    else:
+        command = [
+            "pm2", "start", "dfd_arena.py", 
+            "--no-autorestart",
+            "--name", "dfd_arena",  # Naming the process
+            "--",  # Passes subsequent arguments to the script
+            "--detectors", detector_module,
+            "--model_repo_id", model_repo_id,
+            "--detectors_repo_id", detectors_repo_id,
+            "--hf_token", hf_token
+        ]
     
     try:
         # Run the command using subprocess
