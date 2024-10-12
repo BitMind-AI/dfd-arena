@@ -121,9 +121,6 @@ class UCFDetector(DeepfakeDetector):
             transforms.Resize((256,256)),
             transforms.ToTensor()
         ]
-        if self.dataset_type == 'real':
-            tforms.append(transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]))
-
         transform = transforms.Compose(tforms)
         
         # Apply transformations and add a batch dimension for model inference.
