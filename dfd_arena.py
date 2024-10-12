@@ -82,10 +82,12 @@ class Arena:
         """
         # Infer on real datasets, track true negatives/false positives
         for dataset in self.real_datasets:
+            print(f"Evaluating on real dataset {dataset}")
             self.evaluate_detector(detector, dataset, 'real', n_dataset_samples)
 
         # Infer on fake datasets, track false negatives/true positives
         for dataset in self.fake_datasets:
+            print(f"Evaluating on fake dataset {dataset}")
             self.evaluate_detector(detector, dataset, 'fake', n_dataset_samples)
 
     def evaluate_detector(self, detector, dataset, dataset_type, n_dataset_samples):
