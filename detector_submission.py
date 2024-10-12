@@ -68,8 +68,8 @@ def run_dfd_arena_with_pm2(detector_module, model_repo_id, detectors_repo_id, hf
             "pm2", "start", "dfd_arena.py", 
             "--no-autorestart",
             "--name", "dfd_arena",  # Naming the process
-            "--output", "/home/ubuntu/detector_submission_out.log",  # Output log file
-            "--error", "/home/ubuntu/detector_submission_err.log",   # Error log file
+            "--output", "/dev/console",  # Output log file
+            "--error", "/dev/console",   # Error log file
             "--",  # Passes subsequent arguments to the script
             "--detectors", detector_module,
             "--model_repo_id", model_repo_id,
