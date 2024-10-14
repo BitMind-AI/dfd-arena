@@ -209,7 +209,7 @@ class Arena:
         )
         # If the file is found, load the existing dataset into a DataFrame
         df_updated = pd.read_csv(existing_dataset_path)
-        df_updated.loc[df_updated['detector_name'] == detector_name, 'evaluation_progress'] = 'Complete'
+        df_updated.loc[df_updated['detector_name'] == detector_name, 'evaluation_status'] = 'Complete'
         # Save the updated (or new) DataFrame as a CSV file
         submission_file = "submission.csv"
         df_updated.to_csv(submission_file, index=False)
