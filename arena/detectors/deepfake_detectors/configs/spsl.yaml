@@ -1,0 +1,3 @@
+hf_repo: 'bitmind/spsl'  # Hugging Face repository for downloading model files
+weights: 'spsl_best.pth'  # model checkpoint in HuggingFaces
+train_config: 'spsl.yaml'
