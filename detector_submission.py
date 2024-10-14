@@ -109,9 +109,9 @@ def main():
     args = parser.parse_args()
     args = parser.parse_args()
     dataset = load_dataset(args.detectors_repo_id)['train']
-    filtered_dataset = dataset.filter(lambda x: x['evaluation_progress'] == 'Pending')
+    filtered_dataset = dataset.filter(lambda x: x['evaluation_status'] == 'Benchmarking')
     if len(filtered_dataset) == 0:
-        print("No rows with 'evaluation_progress' equal to 'Pending'. Exiting.")
+        print("No rows with 'evaluation_status' equal to 'Benchmarking'. Exiting.")
         sys.exit(1)
     filtered_dataset = filtered_dataset[0]
     print(filtered_dataset)
