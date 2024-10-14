@@ -8,7 +8,7 @@ First, you need to have your model ready. This can be either your own architectu
 
 ## 2. Add Your Model to a Subdirectory
 
-Create a new subdirectory for your model. For SPSL, we have:
+Create a new subdirectory for your model.
 
 ## 3. Create a Script for Your Model
 
