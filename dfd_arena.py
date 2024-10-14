@@ -21,7 +21,7 @@ class Arena:
         name=None,
         log_dir='.',
         leaderboard_submission=False,
-        model_repo_id=None,
+        results_repo_id=None,
         detectors_repo_id=None,
         hf_token=None
     ):
@@ -54,7 +54,7 @@ class Arena:
         self.dataset_indices = defaultdict(list)
         self.n_failed = defaultdict(int)
         self.leaderboard_submission = leaderboard_submission
-        self.model_repo_id = model_repo_id
+        self.results_repo_id = results_repo_id
         self.detectors_repo_id = detectors_repo_id
         self.hf_token = hf_token
 
@@ -177,7 +177,7 @@ class Arena:
         df_result = pd.DataFrame([results_dict])
         df_result['Detector'] = self.detectors[0]
         try:
-            existing_dataset = load_dataset(self.model_repo_id, use_auth_token=self.hf_token)['train']
+            existing_dataset = load_dataset(self.results_repo_id, use_auth_token=self.hf_token)['train']
             df_existing = pd.DataFrame(existing_dataset)
             print(f"Existing dataset loaded: {df_existing}")
             df_updated = pd.concat([df_existing, df_result])
@@ -192,7 +192,7 @@ class Arena:
         
         try:
             dataset = load_dataset("csv", data_files=submission_file)
-            dataset.push_to_hub(repo_id=self.model_repo_id, token=self.hf_token)
+            dataset.push_to_hub(repo_id=self.results_repo_id, token=self.hf_token)
             return "Submission successful!"
         except Exception as e:
             return f"Failed to push submission: {str(e)}"
@@ -236,7 +236,7 @@ if __name__ == '__main__':
                         help='Path to YAML file containing datasets')
     parser.add_argument('--leaderboard-submission', type=bool, default='False',
                         help='Used to push the metrics dict to the HF results dataset when scoring a leaderboard submission')
-    parser.add_argument('--model-repo-id', type=str, default='', help='Path to leaderboard results dataset repo on HuggingFace')
+    parser.add_argument('--results-repo-id', type=str, default='', help='Path to leaderboard results dataset repo on HuggingFace')
     parser.add_argument('--detectors-repo-id', type=str, default='', help='Path to leaderboard results dataset repo on HuggingFace')
     parser.add_argument('--hf-token', type=str, default='', help='HuggingFace token used update the results dataset')
 
@@ -252,7 +252,7 @@ if __name__ == '__main__':
         name=args.run_name,
         log_dir=args.log_dir,
         leaderboard_submission=args.leaderboard_submission,
-        model_repo_id=args.model_repo_id,
+        results_repo_id=args.results_repo_id,
         detectors_repo_id=args.detectors_repo_id,
         hf_token=args.hf_token,
     )

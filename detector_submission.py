@@ -56,7 +56,7 @@ def move_files(local_dir, detector_file, configs, module):
     shutil.rmtree(local_dir)
     print(f"Deleted the original directory: {local_dir}")
 
-def run_dfd_arena_with_pm2(detector_module, model_repo_id, detectors_repo_id, hf_token, ec2_automation=True):
+def run_dfd_arena_with_pm2(detector_module, results_repo_id, detectors_repo_id, hf_token, ec2_automation=True):
     """
     Runs dfd_arena.py using pm2 with the specified detector module.
     
@@ -73,7 +73,7 @@ def run_dfd_arena_with_pm2(detector_module, model_repo_id, detectors_repo_id, hf
             "--",  # Passes subsequent arguments to the script
             "--leaderboard-submission", "True",
             "--detectors", detector_module,
-            "--model-repo-id", model_repo_id,
+            "--results-repo-id", results_repo_id,
             "--detectors-repo-id", detectors_repo_id,
             "--hf-token", hf_token
         ]
@@ -85,7 +85,7 @@ def run_dfd_arena_with_pm2(detector_module, model_repo_id, detectors_repo_id, hf
             "--",  # Passes subsequent arguments to the script
             "--leaderboard-submission", "True",
             "--detectors", detector_module,
-            "--model-repo-id", model_repo_id,
+            "--results-repo-id", results_repo_id,
             "--detectors-rep-id", detectors_repo_id,
             "--hf-token", hf_token
         ]
@@ -124,7 +124,7 @@ def main():
     else:
         print("Failed to download files.")
     run_dfd_arena_with_pm2(detector_module=filtered_dataset["detector_name"],
-                           model_repo_id=filtered_dataset["model_repo"],
+                           results_repo_id=args.results_repo_id,
                            detectors_repo_id=args.detectors_repo_id,
                            hf_token=args.hf_token)
 
