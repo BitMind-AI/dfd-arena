@@ -22,7 +22,6 @@ def load_datasets(datasets):
             ds['path'],
             huggingface_dataset_split=ds['split'],
             huggingface_dataset_name=ds.get('name', None),            
-            create_splits=False,
             download_mode='reuse_cache_if_exists')
         for ds in datasets['real']
     ]
