@@ -16,11 +16,10 @@ from huggingface_hub import hf_hub_download
 import gc
 
 from base_miner.SPSL.config.constants import CONFIGS_DIR, WEIGHTS_DIR
-from base_miner.gating_mechanisms import FaceGate
 
 from base_miner.SPSL.detectors import DETECTOR
 from base_miner.deepfake_detectors import DeepfakeDetector
-from base_miner import DETECTOR_REGISTRY, GATE_REGISTRY
+from base_miner import DETECTOR_REGISTRY
 
 import bittensor as bt
 
