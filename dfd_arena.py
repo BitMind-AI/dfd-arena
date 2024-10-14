@@ -236,9 +236,9 @@ if __name__ == '__main__':
                         help='Path to YAML file containing datasets')
     parser.add_argument('--leaderboard-submission', type=bool, default='False',
                         help='Used to push the metrics dict to the HF results dataset when scoring a leaderboard submission')
-    parser.add_argument('--model_repo_id', type=str, default='', help='Path to leaderboard results dataset repo on HuggingFace')
-    parser.add_argument('--detectors_repo_id', type=str, default='', help='Path to leaderboard results dataset repo on HuggingFace')
-    parser.add_argument('--hf_token', type=str, default='', help='HuggingFace token used update the results dataset')
+    parser.add_argument('--model-repo-id', type=str, default='', help='Path to leaderboard results dataset repo on HuggingFace')
+    parser.add_argument('--detectors-repo-id', type=str, default='', help='Path to leaderboard results dataset repo on HuggingFace')
+    parser.add_argument('--hf-token', type=str, default='', help='HuggingFace token used update the results dataset')
 
     args = parser.parse_args()
 
