@@ -1,43 +1,53 @@
-## Base Miners
+# Tutorial: Adding a New Deepfake Detector
 
-The `base_miner/` directory facilitates the training, orchestration, and deployment of modular and highly customizable deepfake detectors.
-We broadly define **detector** as an algorithm that either employs a single model or orchestrates multiple models to perform the binary real-or-AI inference task. These **models** can be any algorithm that processes an image to determine its classification. This includes not only pretrained machine learning architectures, but also heuristic and statistical modeling frameworks.
+This tutorial will guide you through the process of adding a new deepfake detector to the DFD Arena framework. We'll use the SPSL (Spatial-Phase Shallow Learning) detector as an example.
 
-## Our Base Miner Detector: Content-Aware Model Orchestration (CAMO)
+## 1. Get Your Model
 
-Read about [CAMO (Content Aware Model Orchestration)](https://bitmindlabs.notion.site/CAMO-Content-Aware-Model-Orchestration-CAMO-Framework-for-Deepfake-Detection-43ef46a0f9de403abec7a577a45cd075), our generalized framework for creating “hard mixture of expert” detectors.
+First, you need to have your model ready. This can be either your own architecture or a pretrained one from prior literature. For this example, we're using the SPSL model.
 
-- **Latest Iteration**: The most performant iteration of `class CAMODetector(DeepfakeDetector)` used in our base miner `neurons/miner.py` incorporates a `GatingMechanism(Gate)` that routes to a fine-tuned face expert model and generalist model with the `UCF` architecture.
+## 2. Add Your Model to a Subdirectory
 
-## Directory Structure
+Create a new subdirectory within `arena/detectors/` for your model. For SPSL, we have:
 
-### 1. Architectures and Training
-- **UCF/** and **NPR/**
+## 3. Create a Script for Your Model
 
-These folders contain model architectures and training loops for `UCF (ICCV 2023)` and `NPR (CVPR 2024)`, adapted to use curated and preprocessed training datasets on our [BitMind Huggingface](https://huggingface.co/bitmind).
+Create a new Python script for your model within the `arena/detectors/deepfake_detectors/` directory. For our SPSL example, we'll create `spsl_detector.py`.
 
-### 2. deepfake_detectors/
-The modular structure for detectors used in the miner neuron is defined here, through `DeepfakeDetector` abstract base class and subclass implementations.
+## 4. Define and Register Your Detector Class
 
-- **deepfake_detectors/** contains:
-  - **configs/**: YAML configuration files to load detector instance attributes, including any pretrained model weights.
-  - **Abstract Base Class**: A foundational class that outlines the standard structure for implementing detectors.
-  - **Detector Subclasses**: Specialized detector implementations that can be dynamically loaded and managed based on configuration.
+In your new script (e.g., `spsl_detector.py`), define your detector class and register it using the `DETECTOR_REGISTRY`. Here's an example:
 
-The `DeepfakeDetector design` allows for high configurability and extension.
+[`dfd-arena/arena/detectors/deepfake_detectors/spsl_detector.py`](spsl_detector.py)
+```
+from arena.detectors.registry import DETECTOR_REGISTRY
+@DETECTOR_REGISTRY.register_module(module_name='SPSL')
+class SPSLDetector:
+def init(self, config):
+# Initialize your model here
+pass
+def forward(self, x):
+# Implement the forward pass of your model
+pass
+```
 
-### 3. gating_mechanisms/
-Similar to `deepfake_detectors/`, this folder contains abstract base classes and implementations of `Gate`s that are used to handle content-aware preprocessing and routing. This is especially useful for multi-agent detection systems, such as the `DeepfakeDetector` subclass `CAMODetector` in `deepfake_detectors/camo_detector.py`.
+## 5. Import Your Detector
+Import your detector in the [`arena/detectors/deepfake_detectors/__init__.py`](__init__.py):
+```
+from .spsl_detector import SPSLDetector
+```
+This step ensures that your detector is available when the framework loads detectors.
 
-- **Abstract Gate Class**: A base class for implementing image content gating.
-- **Gate Subclasses**: These subclasses define specific gating mechanisms responsible for routing inputs to appropriate expert detectors or preprocessing steps based on content characteristics. This is useful for multi-detector or mixture-of-expert detector setups.
+## 6. Evaluate Your Detector
 
-### 4. registry.py
-The `registry.py` file is responsible for managing the creation of detectors and gates using a **Factory Method** design pattern. It auto-registers all `DeepfakeDetector` and `Gate` subclasses from their subfolders to respective `Registry` constants, making it simple to instantiate detectors and gates dynamically based on predefined constants.
+To evaluate your detector, you can use the existing evaluation scripts in the DFD Arena framework. Make sure your detector is properly integrated and can be selected for evaluation.
 
-- **Factory Pattern**: Ensures a clean, maintainable, and scalable method for creating instances of detectors and gating mechanisms.
-- **Auto-Registration**: Automatically registers all available detector and gate subclasses, enabling a flexible and extensible system.
+## 7. Set Up Gates (if necessary)
 
-## Integration with `miner.py`
+If your detector requires any specific gates or preprocessing steps, you can set them up in a similar manner to how you registered the detector. Use the `GATE_REGISTRY` for this purpose.
 
-- **Modular Initialization**: The miner neuron in `bitmind-subnet/neurons/miner.py` leverages the registry system to dynamically initialize the detector used for the forward function, facilitating a highly modular design. The detector module used is determined by neuron config args, defaulting to `"CAMO"`.
+## Understanding the Registration Process
+
+The `DETECTOR_REGISTRY` is imported within `neurons/miner.py`. When you run `setup_miner_env.sh`, it generates a `miner.env` file that specifies which detector to use. The miner script then loads this detector and utilizes it within its forward function.
+
+By following these steps, you've successfully added a new deepfake detector to the DFD Arena framework. You can now use and evaluate your detector alongside other implemented models.
