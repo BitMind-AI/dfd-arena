@@ -84,6 +84,13 @@ class SpslDetector(AbstractDetector):
 
         Returns:
             nn.Module: The constructed backbone network.
+            
+        Note:
+            This method adapts the pretrained 3-channel (RGB) conv1 layer to a
+            4-channel input (RGB + phase) by averaging the pretrained weights
+            across RGB channels and repeating for the 4th channel. This
+            preserves pretrained knowledge while accommodating the
+            additional phase information channel.
         """
         backbone_class = BACKBONE[config['backbone_name']]
         model_config = config['backbone_config']
@@ -103,11 +110,7 @@ class SpslDetector(AbstractDetector):
             # average across the RGB channels
             avg_conv1_data = conv1_data.mean(dim=1, keepdim=True)
             # repeat the averaged weights across the 4 new channels
-            backbone.conv1.weight.data = avg_conv1_data.repeat(1, 4, 1, 1)
-            bt.logging.info('Initialized conv1 weights from pretrained model')
-        else:
-            bt.logging.info('Using random initialization for conv1')
-            
+            backbone.conv1.weight.data = avg_conv1_data.repeat(1, 4, 1, 1)            
         return backbone
 
     def build_loss(self, config):

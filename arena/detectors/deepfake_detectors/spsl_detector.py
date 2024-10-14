@@ -21,7 +21,6 @@ from arena.detectors.SPSL.detectors import DETECTOR
 from arena.detectors.deepfake_detectors import DeepfakeDetector
 from arena.detectors import DETECTOR_REGISTRY
 
-import bittensor as bt
 
 @DETECTOR_REGISTRY.register_module(module_name='SPSL')
 class SPSLDetector(DeepfakeDetector):
@@ -87,8 +86,6 @@ class SPSLDetector(DeepfakeDetector):
         self.train_config['pretrained'] = str(Path(WEIGHTS_DIR) / pretrained_weights)
         
         model_class = DETECTOR[self.train_config['model_name']]
-        bt.logging.info(f"Loaded config from training run: {self.train_config}")
-        bt.logging.info(model_class)
         self.model = model_class(self.train_config).to(self.device)
         self.model.eval()
         weights_path = Path(WEIGHTS_DIR) / self.weights
