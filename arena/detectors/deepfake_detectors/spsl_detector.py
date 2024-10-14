@@ -15,11 +15,11 @@ from PIL import Image
 from huggingface_hub import hf_hub_download
 import gc
 
-from base_miner.SPSL.config.constants import CONFIGS_DIR, WEIGHTS_DIR
+from arena.detectors.SPSL.config.constants import CONFIGS_DIR, WEIGHTS_DIR
 
-from base_miner.SPSL.detectors import DETECTOR
-from base_miner.deepfake_detectors import DeepfakeDetector
-from base_miner import DETECTOR_REGISTRY
+from arena.detectors.SPSL.detectors import DETECTOR
+from arena.detectors.deepfake_detectors import DeepfakeDetector
+from arena.detectors import DETECTOR_REGISTRY
 
 import bittensor as bt
 
