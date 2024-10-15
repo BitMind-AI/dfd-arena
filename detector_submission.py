@@ -56,7 +56,7 @@ def move_files(local_dir, detector_file, configs, module):
     shutil.rmtree(local_dir)
     print(f"Deleted the original directory: {local_dir}")
 
-def run_dfd_arena_with_pm2(detector_module, results_repo_id, detectors_repo_id, hf_token, ec2_automation=True):
+def run_dfd_arena_with_pm2(detector_module, results_repo_id, detectors_repo_id, hf_token, ec2_automation=False):
     """
     Runs dfd_arena.py using pm2 with the specified detector module.
     
@@ -86,7 +86,7 @@ def run_dfd_arena_with_pm2(detector_module, results_repo_id, detectors_repo_id, 
             "--leaderboard-submission", "True",
             "--detectors", detector_module,
             "--results-repo-id", results_repo_id,
-            "--detectors-rep-id", detectors_repo_id,
+            "--detectors-repo-id", detectors_repo_id,
             "--hf-token", hf_token
         ]
     
@@ -99,6 +99,8 @@ def run_dfd_arena_with_pm2(detector_module, results_repo_id, detectors_repo_id, 
 
 def main():
     parser = argparse.ArgumentParser(description="Download a Hugging Face model repo to a local directory")
+    parser.add_argument("--detector_name", type=str, required=True,
+                        help="The detector name to evaluate")
     parser.add_argument("--detectors_repo_id", type=str, required=True,
                         help="The Hugging Face dataset repo name containing all submission details")
     parser.add_argument("--local_dir", type=str, default="submission_files",
@@ -109,9 +111,17 @@ def main():
     args = parser.parse_args()
     args = parser.parse_args()
     dataset = load_dataset(args.detectors_repo_id)['train']
-    filtered_dataset = dataset.filter(lambda x: x['evaluation_status'] == 'Benchmarking')
-    if len(filtered_dataset) == 0:
-        print("No rows with 'evaluation_status' equal to 'Benchmarking'. Exiting.")
+    filtered_row = dataset.filter(lambda x: x['detector_name'] == args.detector_name)
+    
+    # Check if the 'evaluation_status' in the filtered row is 'Benchmarking'
+    if len(filtered_row) > 0:
+        evaluation_status = filtered_row[0]['evaluation_status']
+        print(f"The evaluation status of {args.detector_name} is {evaluation_status}.")
+        if evaluation_status != 'Benchmarking':
+            print('Exiting: evaluation_status != Benchmarking')
+            sys.exit(1)
+    else:
+        print(f"Exiting: No row found with 'detector_name' equal to {args.detector_name}.")
         sys.exit(1)
     filtered_dataset = filtered_dataset[0]
     print(filtered_dataset)
@@ -123,7 +133,7 @@ def main():
                    filtered_dataset["detector_name"])
     else:
         print("Failed to download files.")
-    run_dfd_arena_with_pm2(detector_module=filtered_dataset["detector_name"],
+    run_dfd_arena_with_pm2(detector_module=args.detector_name,
                            results_repo_id=args.results_repo_id,
                            detectors_repo_id=args.detectors_repo_id,
                            hf_token=args.hf_token)
