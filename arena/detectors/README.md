@@ -1,13 +1,13 @@
-## Base Miners
+## Base Detectors
 
-The `base_miner/` directory facilitates the training, orchestration, and deployment of modular and highly customizable deepfake detectors.
+The `detectors/` directory facilitates the training, orchestration, and deployment of modular and highly customizable deepfake detectors.
 We broadly define **detector** as an algorithm that either employs a single model or orchestrates multiple models to perform the binary real-or-AI inference task. These **models** can be any algorithm that processes an image to determine its classification. This includes not only pretrained machine learning architectures, but also heuristic and statistical modeling frameworks.
 
 ## Adding Your Own Detector
 
 If you're interested in creating and adding your own detector to the DFD Arena framework, please refer to our [Tutorial on Adding a New Deepfake Detector](tutorial.md). This guide provides step-by-step instructions on how to integrate your custom detector into our system.
 
-## Our Base Miner Detector: Content-Aware Model Orchestration (CAMO)
+## Our Base Detector: Content-Aware Model Orchestration (CAMO)
 
 Read about [CAMO (Content Aware Model Orchestration)](https://bitmindlabs.notion.site/CAMO-Content-Aware-Model-Orchestration-CAMO-Framework-for-Deepfake-Detection-43ef46a0f9de403abec7a577a45cd075), our generalized framework for creating "hard mixture of expert" detectors.
 
@@ -15,29 +15,32 @@ Read about [CAMO (Content Aware Model Orchestration)](https://bitmindlabs.notion
 
 ## Directory Structure
 
-### 1. deepfake_detectors/
+### 1. detectors/
 The modular structure for detectors used in the miner neuron is defined here, through `DeepfakeDetector` abstract base class and subclass implementations.
 
-- **deepfake_detectors/** contains:
+- **detectors/** contains:
   - **configs/**: YAML configuration files to load detector instance attributes, including any pretrained model weights.
   - **Abstract Base Class**: A foundational class that outlines the standard structure for implementing detectors.
   - **Detector Subclasses**: Specialized detector implementations that can be dynamically loaded and managed based on configuration.
 
-The `DeepfakeDetector design` allows for high configurability and extension.
+The `DeepfakeDetector` design allows for high configurability and extension.
 
-### 2. Architectures and Training
-- **UCF/** and **NPR/**
+### 2. architectures/
+This folder contains model-specific files for various architectures used in deepfake detection:
 
-These folders contain model architectures and training loops for `UCF (ICCV 2023)` and `NPR (CVPR 2024)`, adapted to use curated and preprocessed training datasets on our [BitMind Huggingface](https://huggingface.co/bitmind).
+- **UCF/**: Contains model architecture and training loops for `UCF (ICCV 2023)`.
+- **NPR/**: Contains model architecture and training loops for `NPR (CVPR 2024)`.
 
-### 3. gating_mechanisms/
-Similar to `deepfake_detectors/`, this folder contains abstract base classes and implementations of `Gate`s that are used to handle content-aware preprocessing and routing. This is especially useful for multi-agent detection systems, such as the `DeepfakeDetector` subclass `CAMODetector` in `deepfake_detectors/camo_detector.py`.
+Both are adapted to use curated and preprocessed training datasets on our [BitMind Huggingface](https://huggingface.co/bitmind).
+
+### 3. gates/
+This folder contains abstract base classes and implementations of `Gate`s that are used to handle content-aware preprocessing and routing. This is especially useful for multi-agent detection systems, such as the `DeepfakeDetector` subclass `CAMODetector`.
 
 - **Abstract Gate Class**: A base class for implementing image content gating.
 - **Gate Subclasses**: These subclasses define specific gating mechanisms responsible for routing inputs to appropriate expert detectors or preprocessing steps based on content characteristics. This is useful for multi-detector or mixture-of-expert detector setups.
 
 ### 4. registry.py
-The `registry.py` file is responsible for managing the creation of detectors and gates using a **Factory Method** design pattern. It auto-registers all `DeepfakeDetector` and `Gate` subclasses from their subfolders to respective `Registry` constants, making it simple to instantiate detectors and gates dynamically based on predefined constants.
+The `registry.py` file is responsible for managing the creation of detectors and gates using a **Factory Method** design pattern. It auto-registers all `DeepfakeDetector` and `Gate` subclasses from their respective folders to respective `Registry` constants, making it simple to instantiate detectors and gates dynamically based on predefined constants.
 
 - **Factory Pattern**: Ensures a clean, maintainable, and scalable method for creating instances of detectors and gating mechanisms.
 - **Auto-Registration**: Automatically registers all available detector and gate subclasses, enabling a flexible and extensible system.
