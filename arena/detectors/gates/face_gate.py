@@ -3,10 +3,10 @@ from _dlib_pybind11 import rectangles
 import numpy as np
 import dlib
 
-from arena.detectors.gating_mechanisms import Gate
-from arena.detectors.UCF.config.constants import DLIB_FACE_PREDICTOR_PATH
+from arena.detectors.gates import Gate
 from arena.detectors import GATE_REGISTRY
-from arena.detectors.gating_mechanisms.face_utils import get_face_landmarks, align_and_crop_face
+from arena.detectors.gates.face_utils import get_face_landmarks, align_and_crop_face
+from arena.architectures.UCF.config.constants import DLIB_FACE_PREDICTOR_PATH
 
 
 @GATE_REGISTRY.register_module(module_name='FACE')

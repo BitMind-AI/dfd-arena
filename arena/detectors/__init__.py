@@ -1,3 +1,8 @@
 from .registry import DETECTOR_REGISTRY, GATE_REGISTRY
-from .deepfake_detectors import NPRDetector, UCFDetector, CAMODetector, SPSLDetector
-from .gating_mechanisms import FaceGate, GatingMechanism
+from .gates import FaceGate, GatingMechanism
+from .deepfake_detector import DeepfakeDetector
+from .npr_detector import NPRDetector
+from .ucf_detector import UCFDetector
+from .camo_detector import CAMODetector
+from .spsl_detector import SPSLDetector
+

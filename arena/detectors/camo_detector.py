@@ -2,9 +2,10 @@ from pathlib import Path
 import yaml
 import torch
 from PIL import Image
+
 from arena.detectors.registry import DETECTOR_REGISTRY
-from arena.detectors.gating_mechanisms import GatingMechanism
-from arena.detectors.deepfake_detectors import DeepfakeDetector
+from arena.detectors.gates import GatingMechanism
+from arena.detectors.deepfake_detector import DeepfakeDetector
 
 
 @DETECTOR_REGISTRY.register_module(module_name='CAMO')
