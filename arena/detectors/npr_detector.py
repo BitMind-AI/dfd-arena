@@ -5,10 +5,10 @@ from pathlib import Path
 from huggingface_hub import hf_hub_download
 from bitmind.image_transforms import base_transforms
 
-from arena.detectors.NPR.networks.resnet import resnet50
-from arena.detectors.deepfake_detectors import DeepfakeDetector
-from arena.detectors import DETECTOR_REGISTRY
-from arena.detectors.NPR.config.constants import WEIGHTS_DIR
+from arena.detectors.registry import DETECTOR_REGISTRY
+from arena.detectors.deepfake_detector import DeepfakeDetector
+from arena.architectures.NPR.networks.resnet import resnet50
+from arena.architectures.NPR.config.constants import WEIGHTS_DIR
 
 
 @DETECTOR_REGISTRY.register_module(module_name='NPR')

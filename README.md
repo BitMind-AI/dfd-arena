@@ -56,7 +56,7 @@ conda activate arena
 
 With your virtual env activated, you can install `dfd-arena`:
 ```bash
-cd dfd-arena && pip install -e
+cd dfd-arena && pip install -e .
 ```
 
 ## Usage

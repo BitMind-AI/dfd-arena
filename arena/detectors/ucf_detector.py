@@ -16,12 +16,12 @@ from huggingface_hub import hf_hub_download
 import gc
 
 from bitmind.image_transforms import ucf_transforms, ConvertToRGB, CenterCrop, CLAHE
-from arena.detectors.UCF.config.constants import CONFIGS_DIR, WEIGHTS_DIR
-from arena.detectors.gating_mechanisms import FaceGate
 
-from arena.detectors.UCF.detectors import DETECTOR
-from arena.detectors.deepfake_detectors import DeepfakeDetector
-from arena.detectors import DETECTOR_REGISTRY, GATE_REGISTRY
+from arena.detectors.registry import DETECTOR_REGISTRY, GATE_REGISTRY
+from arena.detectors.deepfake_detector import DeepfakeDetector
+from arena.detectors.gates import FaceGate
+from arena.architectures.UCF.config.constants import CONFIGS_DIR, WEIGHTS_DIR
+from arena.architectures.UCF.detectors import DETECTOR
 from arena.utils.image_transforms import CLAHE
 
 
