@@ -10,6 +10,7 @@ import argparse
 from huggingface_hub import HfApi, snapshot_download
 from datasets import load_dataset
 import subprocess
+import time
 
 def download_huggingface_model(repo_id, local_dir="submission_files"):
     """Downloads a Hugging Face model repository to a local directory."""
@@ -97,25 +98,15 @@ def run_dfd_arena_with_pm2(detector_module, results_repo_id, detectors_repo_id, 
     except subprocess.CalledProcessError as e:
         print(f"Error running dfd_arena.py with pm2: {e}")
 
-def run_detector_test_with_pm2(detector_name, detectors_repo_id, hf_token, ec2_automation):
+def run_detector_test_with_pm2(detector_name, detectors_repo_id, hf_token):
     """
     Runs the unit test script (test_detector.py) using pm2 with the specified detector name.
     Returns True if the tests passed, False otherwise.
     """
-    test_file_path = "arena/detectors/deepfake_detectors/unit_tests/test_deepfakedetector.py"
-    if ec2_automation:
-        test_file_path = "/home/ubuntu/dfd-arena/arena/detectors/deepfake_detectors/unit_tests/test_deepfakedetector.py"
-    test_dir = os.path.dirname(test_file_path)
-    original_dir = os.getcwd()
-    try:
-        print(f"Changing working directory to {test_dir}")
-        os.chdir(test_dir)
-    except OSError as e:
-        print(f"Error changing directory: {e}")
     command = [
-        "pm2", "start", os.path.basename(test_file_path),  # Only the filename, because we are already in the correct directory
+        "pm2", "start", "test_submission_inference.py",  # Only the filename, because we are already in the correct directory
         "--no-autorestart",
-        "--name", f"test_{detector_name}_detector",  # Naming the process
+        "--name", f"testing_{detector_name}_inference",  # Naming the process
         "--",  # Passes subsequent arguments to the script
         "--detector_name", detector_name,
         "--detectors_repo_id", detectors_repo_id,
@@ -125,12 +116,9 @@ def run_detector_test_with_pm2(detector_name, detectors_repo_id, hf_token, ec2_a
     try:
         # Run the command using subprocess
         subprocess.run(command, check=True)
-        print(f"Successfully started {test_file_path} with pm2 using detector: {detector_name}")
+        print(f"Successfully started test_submission_inference.py with pm2 using detector: {detector_name}")
     except subprocess.CalledProcessError as e:
-        print(f"Error running {test_file_path} with pm2: {e}")
-    
-    print(f"Returning to the original directory: {original_dir}")
-        os.chdir(original_dir)
+        print(f"Error running test_submission_inference.py with pm2: {e}")
 
 def main():
     parser = argparse.ArgumentParser(description="Download a Hugging Face model repo to a local directory")
@@ -154,7 +142,7 @@ def main():
         evaluation_status = filtered_row[0]['evaluation_status']
         print(f"The evaluation status of {args.detector_name} is {evaluation_status}.")
         if evaluation_status != 'Benchmarking':
-            print('Exiting: evaluation_status != Benchmarking')
+            print(f'Exiting: evaluation_status of {args.detector_name} != Benchmarking')
             sys.exit(1)
     else:
         print(f"Exiting: No row found with 'detector_name' equal to {args.detector_name}.")
@@ -170,7 +158,7 @@ def main():
     else:
         print("Failed to download files.")
 
-    run_detector_test_with_pm2(args.detector_name, args.detectors_repo_id, args.hf_token, args.ec2_automation)
+    run_detector_test_with_pm2(args.detector_name, args.detectors_repo_id, args.hf_token)
     
     while True:
         dataset = load_dataset(args.detectors_repo_id)['train']
@@ -185,7 +173,8 @@ def main():
             break
         elif filtered_row and filtered_row[0]['passed_invocation_test'] == 'Failed':
             print("Detector invocation unit tests failed. Not running dfd_arena_with_pm2.")
-            sys.exit(1)    
+            sys.exit(1)
+        time.sleep(2)
 
 if __name__ == "__main__":
     main()
