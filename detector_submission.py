@@ -156,25 +156,25 @@ def main():
     else:
         print(f"Exiting: No row found with 'detector_name' equal to {args.detector_name}.")
         sys.exit(1)
-    filtered_dataset = filtered_dataset[0]
-    print(filtered_dataset)
-    downloaded_dir = download_huggingface_model(repo_id=filtered_dataset["model_repo"], local_dir=args.local_dir)
+    filtered_row = filtered_row[0]
+    print(filtered_row)
+    downloaded_dir = download_huggingface_model(repo_id=filtered_row["model_repo"], local_dir=args.local_dir)
     if downloaded_dir:
         move_files(downloaded_dir,
-                   filtered_dataset["detector_file_path"],
-                   filtered_dataset["configs_file_path"],
-                   filtered_dataset["detector_name"])
+                   filtered_row["detector_file_path"],
+                   filtered_row["configs_file_path"],
+                   filtered_row["detector_name"])
     else:
         print("Failed to download files.")
 
-    if filtered_dataset['passed_invocation_test'] == 'Pending':
+    if filtered_row['passed_invocation_test'] == 'Pending':
         test_passed = run_detector_test_with_pm2(args.detector_name, args.detectors_repo_id, args.hf_token)
         if not test_passed:
             print("Detector invocation unit tests failed. Not running dfd_arena_with_pm2.")
             sys.exit(1)
         print("Detector invocation unit tests passed. Running dfd_arena_with_pm2.")
         
-    if filtered_dataset['passed_invocation_test'] == 'True':
+    if filtered_row['passed_invocation_test'] == 'True':
         run_dfd_arena_with_pm2(detector_module=args.detector_name,
                                results_repo_id=args.results_repo_id,
                                detectors_repo_id=args.detectors_repo_id,
