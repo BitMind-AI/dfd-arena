@@ -119,7 +119,8 @@ def run_detector_test_with_pm2(detector_name, detectors_repo_id, hf_token):
         print(f"Successfully started {test_file_path} with pm2 using detector: {detector_name}")
         # Check if the process finished successfully
         result = subprocess.run(['pm2', 'status', f'test_{detector_name}_detector'], capture_output=True, text=True)
-        if "errored" in result.stdout.lower():
+        print(result.stdout.lower())
+        if "failed" in result.stdout.lower():
             print(f"Unit test failed for {detector_name}.")
             return False
         else:
