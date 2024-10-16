@@ -97,14 +97,23 @@ def run_dfd_arena_with_pm2(detector_module, results_repo_id, detectors_repo_id, 
     except subprocess.CalledProcessError as e:
         print(f"Error running dfd_arena.py with pm2: {e}")
 
-def run_detector_test_with_pm2(detector_name, detectors_repo_id, hf_token):
+def run_detector_test_with_pm2(detector_name, detectors_repo_id, hf_token, ec2_automation):
     """
     Runs the unit test script (test_detector.py) using pm2 with the specified detector name.
     Returns True if the tests passed, False otherwise.
     """
-    test_file_path = "/home/ubuntu/dfd-arena/arena/detectors/deepfake_detectors/unit_tests/test_deepfakedetector.py"
+    test_file_path = "arena/detectors/deepfake_detectors/unit_tests/test_deepfakedetector.py"
+    if ec2_automation:
+        test_file_path = "/home/ubuntu/dfd-arena/arena/detectors/deepfake_detectors/unit_tests/test_deepfakedetector.py"
+    test_dir = os.path.dirname(test_file_path)
+    original_dir = os.getcwd()
+    try:
+        print(f"Changing working directory to {test_dir}")
+        os.chdir(test_dir)
+    except OSError as e:
+        print(f"Error changing directory: {e}")
     command = [
-        "pm2", "start", test_file_path,
+        "pm2", "start", os.path.basename(test_file_path),  # Only the filename, because we are already in the correct directory
         "--no-autorestart",
         "--name", f"test_{detector_name}_detector",  # Naming the process
         "--",  # Passes subsequent arguments to the script
@@ -117,18 +126,11 @@ def run_detector_test_with_pm2(detector_name, detectors_repo_id, hf_token):
         # Run the command using subprocess
         subprocess.run(command, check=True)
         print(f"Successfully started {test_file_path} with pm2 using detector: {detector_name}")
-        # Check if the process finished successfully
-        result = subprocess.run(['pm2', 'status', f'test_{detector_name}_detector'], capture_output=True, text=True)
-        print(result.stdout.lower())
-        if "failed" in result.stdout.lower():
-            print(f"Unit test failed for {detector_name}.")
-            return False
-        else:
-            print(f"Unit test passed for {detector_name}.")
-            return True
     except subprocess.CalledProcessError as e:
         print(f"Error running {test_file_path} with pm2: {e}")
-        return False
+    
+    print(f"Returning to the original directory: {original_dir}")
+        os.chdir(original_dir)
 
 def main():
     parser = argparse.ArgumentParser(description="Download a Hugging Face model repo to a local directory")
@@ -168,19 +170,22 @@ def main():
     else:
         print("Failed to download files.")
 
-    if filtered_row['passed_invocation_test'] == 'Pending':
-        test_passed = run_detector_test_with_pm2(args.detector_name, args.detectors_repo_id, args.hf_token)
-        if not test_passed:
+    run_detector_test_with_pm2(args.detector_name, args.detectors_repo_id, args.hf_token, args.ec2_automation)
+    
+    while True:
+        dataset = load_dataset(args.detectors_repo_id)['train']
+        filtered_row = dataset.filter(lambda x: x['detector_name'] == args.detector_name)
+        if filtered_row and filtered_row[0]['passed_invocation_test'] == 'Passed':
+            print("Detector invocation unit tests passed. Running dfd_arena_with_pm2.")
+            run_dfd_arena_with_pm2(detector_module=args.detector_name,
+                                   results_repo_id=args.results_repo_id,
+                                   detectors_repo_id=args.detectors_repo_id,
+                                   hf_token=args.hf_token,
+                                   ec2_automation=args.ec2_automation)
+            break
+        elif filtered_row and filtered_row[0]['passed_invocation_test'] == 'Failed':
             print("Detector invocation unit tests failed. Not running dfd_arena_with_pm2.")
-            sys.exit(1)
-        print("Detector invocation unit tests passed. Running dfd_arena_with_pm2.")
-        
-    if filtered_row['passed_invocation_test'] == 'True':
-        run_dfd_arena_with_pm2(detector_module=args.detector_name,
-                               results_repo_id=args.results_repo_id,
-                               detectors_repo_id=args.detectors_repo_id,
-                               hf_token=args.hf_token,
-                               ec2_automation=args.ec2_automation)
+            sys.exit(1)    
 
 if __name__ == "__main__":
     main()

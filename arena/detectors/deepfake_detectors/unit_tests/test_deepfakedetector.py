@@ -36,7 +36,7 @@ class TestDeepfakeDetector(unittest.TestCase):
         self.assertIsInstance(prediction, np.ndarray, "Output should be a np.ndarray containing a float value")
         self.assertTrue(0 <= prediction <= 1, "Output should be between 0 and 1")
 
-def update_dataset(detectors_repo_id, hf_token, detector_name, passed, error_message=None):
+def update_dataset(detectors_repo_id, hf_token, detector_name, passed):
     """Update the Hugging Face dataset with the test results."""
     from datasets import load_dataset, Dataset
     # Load the dataset
@@ -45,9 +45,8 @@ def update_dataset(detectors_repo_id, hf_token, detector_name, passed, error_mes
     # Find the row with 'detector_name' equal to detector_name
     def update_row(example):
         if example['detector_name'] == detector_name:
-            example['passed_invocation_test'] = str(passed)
-            if not passed:
-                example['error_message'] = str(error_message)
+            if passed: example['passed_invocation_test'] = "Passed"
+            else: example['passed_invocation_test'] = "Failed"
         return example
 
     # Apply the update to the dataset
@@ -81,8 +80,3 @@ if __name__ == '__main__':
     if result.wasSuccessful():
         print("Successful!")
         update_dataset(args.detectors_repo_id, args.hf_token, args.detector_name, passed=True)
-    else:
-        # Collect error messages
-        errors = result.errors + result.failures
-        error_message = '\n'.join([str(err[1]) for err in errors])
-        update_dataset(args.detectors_repo_id, args.hf_token, args.detector_name, passed=False, error_message=error_message)
