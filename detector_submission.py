@@ -102,7 +102,7 @@ def run_detector_test_with_pm2(detector_name, detectors_repo_id, hf_token):
     Runs the unit test script (test_detector.py) using pm2 with the specified detector name.
     Returns True if the tests passed, False otherwise.
     """
-    test_file_path = "arena/detectors/deepfake_detectors/unit_tests/test_detector.py"
+    test_file_path = "/home/ubuntu/dfd-arena/arena/detectors/deepfake_detectors/unit_tests/test_detector.py"
     command = [
         "pm2", "start", test_file_path,
         "--no-autorestart",
