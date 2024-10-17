@@ -1,5 +1,5 @@
 # log dir 
-log_dir: /mntcephfs/lab_data/zhiyuanyan/benchmark_results/logs_final/spsl_4frames
+log_dir: /logs/training
 
 # model setting
 pretrained: ../weights/xception_best.pth   # path to a pre-trained model, if using one
