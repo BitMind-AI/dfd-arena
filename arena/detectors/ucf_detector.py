@@ -84,6 +84,9 @@ class UCFDetector(DeepfakeDetector):
         self.init_cudnn()
         self.init_seed()
         self.ensure_weights_are_available(self.weights)
+        pretrained_weights = self.train_config['pretrained'].split('/')[-1]
+        self.ensure_weights_are_available(pretrained_weights)
+        self.train_config['pretrained'] = str(Path(WEIGHTS_DIR) / pretrained_weights)
         self.ensure_weights_are_available(self.backbone_weights)
         model_class = DETECTOR[self.train_config['model_name']]
         self.model = model_class(self.train_config).to(self.device)

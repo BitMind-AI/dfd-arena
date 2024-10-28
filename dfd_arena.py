@@ -5,6 +5,7 @@ import time
 import os
 import argparse
 import yaml
+import numpy as np
 
 from arena.utils.metrics import compute_metrics
 from arena.utils.data import load_datasets, upper_left_quadrant
@@ -47,18 +48,33 @@ class Arena:
                 for dataset_path in self.dataset_paths + ['total']
             } for detector_name in detectors
         }
+
+        self.prediction_sums = {
+            detector_name: {
+                dataset_path: defaultdict(float)
+                for dataset_path in self.dataset_paths + ['total']
+            } for detector_name in detectors
+        }
+
+        self.predictions = {
+            detector_name: {
+                dataset_path: defaultdict(list)
+                for dataset_path in self.dataset_paths + ['total']
+            } for detector_name in detectors
+        }
+
         self.dataset_indices = defaultdict(list)
         self.n_failed = defaultdict(int)
 
-    def run_benchmarks(self):
+    def run_benchmarks(self, n_dataset_samples=1000):
         """Run benchmarks for all detectors against real and synthetic datasets."""
         for detector_name in self.detectors:
             print(f"Evaluating {detector_name}...")
             detector = DETECTOR_REGISTRY[detector_name]()
             detector.name = detector_name
-            self.benchmark_detector(detector)
+            self.benchmark_detector(detector, n_dataset_samples=n_dataset_samples)
             print(f'----- Detector: {detector_name} -----')
-            self.display_metrics(self.metrics[detector_name])
+            self.display_metrics(self.metrics[detector_name], self.prediction_sums[detector_name], self.predictions[detector_name])
         self.save_results()
 
     def benchmark_detector(self, detector, n_dataset_samples=1000):
@@ -121,13 +137,21 @@ class Arena:
 
             self.metrics[detector.name][ds_path][key] += 1
             self.metrics[detector.name]['total'][key] += 1
+            
+            self.prediction_sums[detector.name][ds_path][key] += pred
+            self.prediction_sums[detector.name]['total'][key] += pred
 
-    def display_metrics(self, metrics):
+            self.predictions[detector.name][ds_path][key].append(pred)
+            self.predictions[detector.name]['total'][key].append(pred)
+
+    def display_metrics(self, metrics, prediction_sums, predictions):
         """
         Display metrics for each dataset and the total.
 
         Args:
             metrics (dict): Dictionary containing metrics for each dataset and total.
+            prediction_sums (dict): Dictionary containing sums of predictions for each dataset and total.
+            predictions (dict): Dictionary containing lists of predictions for each dataset and total.
         """
         for ds_path, ds_metrics in metrics.items():
             print(ds_path)
@@ -135,15 +159,39 @@ class Arena:
             if ds_path == 'total':
                 for metric, value in computed_metrics.items():
                     print(f'\t{metric}: {value}')
+                for key in ['tp', 'tn', 'fp', 'fn']:
+                    if ds_metrics[key] > 0:
+                        avg_pred = prediction_sums[ds_path][key] / ds_metrics[key]
+                        # Convert tensor to float if necessary
+                        avg_pred = float(avg_pred) if hasattr(avg_pred, 'item') else avg_pred
+                        print(f'\tAvg {key.upper()} prediction: {avg_pred:.4f}')
+                        
+                        # Calculate and display median prediction
+                        median_pred = np.median(predictions[ds_path][key])
+                        median_pred = float(median_pred) if hasattr(median_pred, 'item') else median_pred
+                        print(f'\tMedian {key.upper()} prediction: {median_pred:.4f}')
                 print()
             else:
                 print(f'\taccuracy: {computed_metrics["accuracy"]}')
+                for key in ['tp', 'tn', 'fp', 'fn']:
+                    if ds_metrics[key] > 0:
+                        avg_pred = prediction_sums[ds_path][key] / ds_metrics[key]
+                        # Convert tensor to float if necessary
+                        avg_pred = float(avg_pred) if hasattr(avg_pred, 'item') else avg_pred
+                        print(f'\tAvg {key.upper()} prediction: {avg_pred:.4f}')
+                        
+                        # Calculate and display median prediction
+                        median_pred = np.median(predictions[ds_path][key])
+                        median_pred = float(median_pred) if hasattr(median_pred, 'item') else median_pred
+                        print(f'\tMedian {key.upper()} prediction: {median_pred:.4f}')
 
     def save_results(self):
         """Save benchmark results to files."""
         output_dir = os.path.join(self.log_dir, self.name)
         os.makedirs(output_dir, exist_ok=True)
         joblib.dump(self.metrics, os.path.join(output_dir, 'metrics.pkl'))
+        joblib.dump(self.prediction_sums, os.path.join(output_dir, 'prediction_sums.pkl'))
+        joblib.dump(self.predictions, os.path.join(output_dir, 'predictions.pkl'))
         joblib.dump(self.dataset_indices, os.path.join(output_dir, 'dataset_indices.pkl'))
         joblib.dump(self.n_failed, os.path.join(output_dir, 'n_failed.pkl'))
 
@@ -154,7 +202,8 @@ if __name__ == '__main__':
     parser.add_argument('--run-name', type=str, default=None, help='Name of benchmarking run')
     parser.add_argument('--detectors', nargs='+', default=['CAMO', 'UCF', 'NPR'], help='List of detector names')
     parser.add_argument('--dataset-config', type=str, default='arena/datasets.yaml', help='Path to YAML file containing datasets')
-
+    parser.add_argument('--samples', type=int, default='1000', help='Number of samples per dataset.')
+    
     args = parser.parse_args()
 
     with open(args.dataset_config, 'r') as file:
@@ -167,5 +216,5 @@ if __name__ == '__main__':
         name=args.run_name,
         log_dir=args.log_dir
     )
-    arena.run_benchmarks()
+    arena.run_benchmarks(n_dataset_samples=args.samples)
     print(f"----- Finished benchmarking in {time.time() - start:.4f}s -----")
