@@ -15,14 +15,12 @@ from PIL import Image
 from huggingface_hub import hf_hub_download
 import gc
 
-from bitmind.image_transforms import ucf_transforms, ConvertToRGB, CenterCrop, CLAHE
-
 from arena.detectors.registry import DETECTOR_REGISTRY, GATE_REGISTRY
 from arena.detectors.deepfake_detector import DeepfakeDetector
 from arena.detectors.gates import FaceGate
 from arena.architectures.UCF.config.constants import CONFIGS_DIR, WEIGHTS_DIR
 from arena.architectures.UCF.detectors import DETECTOR
-from arena.utils.image_transforms import CLAHE
+from arena.utils.image_transforms import CLAHE, ucf_transforms
 
 
 @DETECTOR_REGISTRY.register_module(module_name='UCF')
@@ -117,23 +115,10 @@ class UCFDetector(DeepfakeDetector):
         Returns:
             torch.Tensor: The preprocessed image tensor, ready for model inference.
         """
-        # Convert image to RGB format to ensure consistent color handling.
-        tforms = [
-            ConvertToRGB(),
-            CenterCrop(),
-            transforms.Resize((256,256)),
-            transforms.ToTensor()
-        ]
-        if self.dataset_type == 'real':
-            tforms.append(transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]))
-
-        transform = transforms.Compose(tforms)
+        # Apply the predefined UCF transforms
+        image_tensor = ucf_transforms(image).unsqueeze(0)
         
-        # Apply transformations and add a batch dimension for model inference.
-        image_tensor = transform(image).unsqueeze(0)
-
-        
-        # Move the image tensor to the specified device (e.g., GPU).
+        # Move the image tensor to the specified device (e.g., GPU)
         return image_tensor.to(self.device)
 
     def infer(self, image_tensor):
@@ -144,7 +129,8 @@ class UCFDetector(DeepfakeDetector):
 
     def __call__(self, image: Image) -> float:
         image_tensor = self.preprocess(image)
-        return self.infer(image_tensor)
+        pred = self.infer(image_tensor)
+        return pred
     
     def free_memory(self):
         """ Frees up memory by setting model and large data structures to None. """

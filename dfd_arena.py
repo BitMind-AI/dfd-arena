@@ -6,10 +6,14 @@ import os
 import argparse
 import yaml
 import numpy as np
+from scipy import stats
 
 from arena.utils.metrics import compute_metrics
 from arena.utils.data import load_datasets, upper_left_quadrant
 from arena.detectors.registry import DETECTOR_REGISTRY
+
+from arena.utils.image_transforms import random_aug_transforms
+import torchvision.transforms as transforms
 
 
 class Arena:
@@ -20,7 +24,8 @@ class Arena:
         detectors,
         datasets,
         name=None,
-        log_dir='.'
+        log_dir='.',
+        augment=False
     ):
         """
         Args:
@@ -32,6 +37,8 @@ class Arena:
         """
         self.name = name or f'benchmark-{time.time()}'
         self.log_dir = log_dir
+        self.augment = augment
+        
         os.makedirs(self.log_dir, exist_ok=True)
 
         self.dataset_paths = [
@@ -70,6 +77,7 @@ class Arena:
         """Run benchmarks for all detectors against real and synthetic datasets."""
         for detector_name in self.detectors:
             print(f"Evaluating {detector_name}...")
+            if self.augment: print("Evaluating with augmentations")
             detector = DETECTOR_REGISTRY[detector_name]()
             detector.name = detector_name
             self.benchmark_detector(detector, n_dataset_samples=n_dataset_samples)
@@ -128,6 +136,10 @@ class Arena:
 
             if sampling_new_indices:
                 self.dataset_indices[ds_path].append(image_idx)
+                
+            if self.augment:
+                image = random_aug_transforms(image)
+                image = transforms.ToPILImage()(image)
 
             pred = detector(image)
             if pred <= 0.5:
@@ -170,6 +182,16 @@ class Arena:
                         median_pred = np.median(predictions[ds_path][key])
                         median_pred = float(median_pred) if hasattr(median_pred, 'item') else median_pred
                         print(f'\tMedian {key.upper()} prediction: {median_pred:.4f}')
+                        
+                        if len(predictions[ds_path][key]) > 1:
+                            ci = stats.t.interval(
+                                confidence=0.95,
+                                df=len(predictions[ds_path][key])-1,
+                                loc=np.mean(predictions[ds_path][key]),
+                                scale=stats.sem(predictions[ds_path][key])
+                            )
+                            print(f'\t{key.upper()} 95% CI: ({ci[0]:.4f}, {ci[1]:.4f})')
+
                 print()
             else:
                 print(f'\taccuracy: {computed_metrics["accuracy"]}')
@@ -184,6 +206,7 @@ class Arena:
                         median_pred = np.median(predictions[ds_path][key])
                         median_pred = float(median_pred) if hasattr(median_pred, 'item') else median_pred
                         print(f'\tMedian {key.upper()} prediction: {median_pred:.4f}')
+                print()
 
     def save_results(self):
         """Save benchmark results to files."""
@@ -203,6 +226,7 @@ if __name__ == '__main__':
     parser.add_argument('--detectors', nargs='+', default=['CAMO', 'UCF', 'NPR'], help='List of detector names')
     parser.add_argument('--dataset-config', type=str, default='arena/datasets.yaml', help='Path to YAML file containing datasets')
     parser.add_argument('--samples', type=int, default='1000', help='Number of samples per dataset.')
+    parser.add_argument('--augment', action='store_true', help='Enable random augmentations during evaluation.')
     
     args = parser.parse_args()
 
@@ -215,6 +239,7 @@ if __name__ == '__main__':
         datasets=benchmark_datasets,
         name=args.run_name,
         log_dir=args.log_dir
+        augment=args.augment
     )
     arena.run_benchmarks(n_dataset_samples=args.samples)
     print(f"----- Finished benchmarking in {time.time() - start:.4f}s -----")

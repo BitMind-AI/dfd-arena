@@ -1,20 +1,24 @@
 real:
-  - path: bitmind/celeb-a-hq
+  - path: bitmind/bm-real
     split: train
-  - path: evanarlian/imagenet_1k_resized_256
-    split: test
-  - path: nlphuji/flickr30k
-    split: test
 
 fake:
+  - path: bitmind/bm-subnet-mobius-256
+    split: train
+  - path: bitmind/bm-subnet-realvis-256
+    split: train
+  - path: bitmind/bm-subnet-sdxl-256
+    split: train
   - path: bitmind/celeb-a-hq___FLUX.1-dev
     split: train
-  - path: bitmind/celeb-a-hq___stable-diffusion-xl-base-1.0
+  - path: bitmind/ffhq-256___FLUX.1-dev
     split: train
   - path: bitmind/MS-COCO-unique___FLUX.1-dev
-    split: train
-  - path: bitmind/flickr30k-stable-diffusion
-    split: train
-  - path: poloclub/diffusiondb
-    split: train
-    name: 2m_first_10k
+:
+  # - path: bitmind/MS-COCO-unique___FLUX.1-dev
+  #   split: train
+  # - path: bitmind/flickr30k-stable-diffusion
+  #   split: train
+  # - path: poloclub/diffusiondb
+  #   split: train
+  #   name: 2m_first_10k
